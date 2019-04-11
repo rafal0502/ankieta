@@ -1,6 +1,7 @@
 from django.shortcuts import render, get_object_or_404
 from django.http import HttpResponse, Http404, HttpResponseRedirect
 from django.urls import reverse
+from django.utils import timezone
 from django.views import generic
 
 from .models import Question, Choice
@@ -21,6 +22,13 @@ class DetailView(generic.ListView):
     model = Question
     template_name = 'polls/detail.html'
 
+    def get_queryset(self):
+        """
+        Excludes any questions that aren't published yet
+        :return:
+        """
+        return Question.objects.filter(pub_date__lte=timezone.now())
+
 
 class ResultsView(generic.ListView):
     model = Question
@@ -34,7 +42,7 @@ def vote(request, question_id):
     except(KeyError, Choice.DoesNotExist):
         return render(request, 'polls/detail.html', {
             'question': question,
-            'error_message': "You didn't select a choice."
+            'error_message': "You didn't select a choice.",
         })
     else:
         selected_choice.votes += 1
